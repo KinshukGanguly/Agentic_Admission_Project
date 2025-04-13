@@ -6,6 +6,9 @@ import pandas as pd
 from datetime import datetime
 import os
 
+# Import the chatbot function
+from chatbot import ask_admin_bot
+
 DB_PATH = "database/admissions.db"
 
 def hash_password(password):
@@ -116,8 +119,35 @@ else:
         st.dataframe(df, use_container_width=True)
 
     elif menu == "Ask Assistant":
-        st.header("💡 Ask Assistant (Coming Soon)")
-        st.info("This feature is under development.")
+        st.header("💡 Ask Admissions Assistant")
+
+        if "messages" not in st.session_state:
+            st.session_state.messages = []
+
+        for msg in st.session_state.messages:
+            with st.chat_message(msg["role"]):
+                st.markdown(msg["content"])
+
+        user_input = st.chat_input("Ask about admissions, applications, results...")
+        if user_input:
+            st.session_state.messages.append({"role": "user", "content": user_input})
+            with st.chat_message("user"):
+                st.markdown(user_input)
+            with st.chat_message("assistant"):
+                message_placeholder = st.empty()
+                with st.spinner("Thinking..."):
+                    response = ask_admin_bot(user_input)
+                    if isinstance(response, dict) and 'output' in response:
+                        message_placeholder.markdown(response['output'])
+                        st.session_state.messages.append({"role": "assistant", "content": response['output']})
+                    else:
+                        message_placeholder.markdown(response)
+                        st.session_state.messages.append({"role": "assistant", "content": response})
+
+
+        if st.button("Clear Conversation"):
+            st.session_state.messages = []
+            st.rerun()
 
     elif menu == "Logout":
         st.session_state.admin_logged_in = False
