@@ -24,7 +24,7 @@ db_engine = create_engine("sqlite:///database/admissions.db")
 db = SQLDatabase(db_engine)
 
 # Initialize LLM and LangChain SQL Toolkit
-llm = ChatOpenAI(temperature=0, model="gpt-4", openai_api_key=OPENAI_API_KEY)
+llm = ChatOpenAI(temperature=0, model="gpt-3.5-turbo", openai_api_key=OPENAI_API_KEY)
 toolkit = SQLDatabaseToolkit(db=db, llm=llm)
 
 # System prompt explaining the database
