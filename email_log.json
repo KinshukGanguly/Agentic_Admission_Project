@@ -1,0 +1,32 @@
+[
+    {
+        "email": "sahasubhajit32102@gmail.com",
+        "status": "rejected",
+        "issues": [
+            "Class X marksheet error"
+        ],
+        "timestamp": "2025-04-12T23:25:59.505188"
+    },
+    {
+        "email": "subhajitmello02@gmail.com",
+        "status": "rejected",
+        "issues": [
+            "Bahut kharab jee rankcard hain..tauba tauba.."
+        ],
+        "timestamp": "2025-04-12T23:26:02.905710"
+    },
+    {
+        "email": "sahasubhajit32102@gmail.com",
+        "status": "rejected",
+        "issues": [
+            "Class X marksheet error"
+        ],
+        "timestamp": "2025-04-12T23:30:12.151360"
+    },
+    {
+        "email": "subhajitmello02@gmail.com",
+        "status": "Bahut kharab jee rankcard hain..tauba tauba..",
+        "issues": [],
+        "timestamp": "2025-04-12T23:30:20.051217"
+    }
+]
