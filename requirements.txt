@@ -17,3 +17,7 @@ python-dotenv==1.0.0
 sqlite3==2.6.0  
 tesseract-ocr
 poppler-utils
+crewai
+crewai-tools
+openai
+langchain-openai
