@@ -68,7 +68,7 @@ def generate_email_body(student):
         verbose=True,
         allow_delegation=False,
         tools=[],
-        llm="gpt-4"
+        llm="gpt-3.5-turbo",
     )
 
     issue_text = (
