@@ -1,1 +1,1 @@
-Admission_Results table updated and email logs saved to email_log.json.
+The Admission_Results table has been updated and email logs saved to students.json.

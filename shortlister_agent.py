@@ -25,18 +25,20 @@ class ShortlistingTool(BaseTool):
         cursor.execute("PRAGMA foreign_keys = ON")
 
         try:
+            # Step 1: Fetch available seats
             cursor.execute("SELECT Stream, Available_Seats FROM Admission_Seats WHERE Available_Seats > 0")
             available_seats = dict(cursor.fetchall())
 
+            # Step 2: Process applicants per stream
             for stream, seats in available_seats.items():
                 cursor.execute("""
-                SELECT app.Email, app.JEE_Rank
-                FROM Application_Data AS app
-                LEFT JOIN Admission_Results AS res ON app.Email = res.Email
-                WHERE app.Stream_Applied = ?
-                AND (res.shortlisting_done IS NULL OR res.shortlisting_done = 0)
-                ORDER BY app.JEE_Rank ASC
-            """, (stream,))
+                    SELECT app.Email, app.JEE_Rank
+                    FROM Application_Data AS app
+                    LEFT JOIN Admission_Results AS res ON app.Email = res.Email
+                    WHERE app.Stream_Applied = ?
+                    AND (res.shortlisting_done IS NULL OR res.shortlisting_done = 0)
+                    ORDER BY app.JEE_Rank ASC
+                """, (stream,))
                 applicants = cursor.fetchall()
                 selected = 0
 
@@ -48,42 +50,38 @@ class ShortlistingTool(BaseTool):
                         VALUES (?, 1, ?, 0)
                     """, (email, int(accepted)))
 
-                    cursor.execute("UPDATE Admission_Results SET shortlisting_done = 1 WHERE Email = ?", (email,))
-
                     if accepted:
                         cursor.execute("UPDATE Admission_Seats SET Available_Seats = Available_Seats - 1 WHERE Stream = ?", (stream,))
-                        self._log_email(email, "accepted")
                         selected += 1
-                    else:
-                        self._log_email(email, "rejected")
+
+            # Step 3: Fetch students where shortlisting is done, but email not yet sent
+            cursor.execute("""
+                SELECT Email, acceptance_status
+                FROM Admission_Results
+                WHERE shortlisting_done = 1 AND acceptance_status_email_sent = 0
+            """)
+            shortlisted_students = cursor.fetchall()
+
+            logs = []
+            for email, status in shortlisted_students:
+                logs.append({
+                    "email": email,
+                    "status": f"Application {'accepted' if status else 'rejected'}",
+                    "issues": [""],
+                    "timestamp": datetime.now().isoformat()
+                })
+
+            with open("students.json", "w") as f:
+                json.dump(logs, f, indent=4)
 
             conn.commit()
-            return "✅ Shortlisting completed and results updated."
+            return "✅ Shortlisting completed and fresh shortlisted students logged to students.json."
 
         except Exception as e:
             return f"❌ Error during shortlisting: {str(e)}"
 
         finally:
             conn.close()
-
-    def _log_email(self, email, status):
-        log_path = "students.json"
-        log_entry = {
-            "email": email,
-            "status": f"Application {status}",
-            "issues": [""],
-            "timestamp": datetime.now().isoformat()
-        }
-
-        try:
-            with open(log_path, "r") as f:
-                logs = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            logs = []
-
-        logs.append(log_entry)
-        with open(log_path, "w") as f:
-            json.dump(logs, f, indent=4)
 
 
 # ------------------ AGENT ------------------ #
@@ -100,7 +98,7 @@ ShortlisterAgent = Agent(
 # ------------------ TASK ------------------ #
 ShortlistTask = Task(
     description="Execute the applicant shortlisting process by triggering the tool.",
-    expected_output="Admission_Results table updated and email logs saved to email_log.json.",
+    expected_output="Admission_Results table updated and email logs saved to students.json.",
     agent=ShortlisterAgent,
     output_file="shortlister_output.txt"
 )

@@ -248,7 +248,6 @@ else:
     # --- Page: Ask Assistant ---
     elif page_key == "Assistant":
         st.header("🤖 Ask Admissions Assistant")
-        st.info("Query the admissions database using natural language.")
 
         for msg in st.session_state.chat_messages:
             with st.chat_message(msg["role"]):
