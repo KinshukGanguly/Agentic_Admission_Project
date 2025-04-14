@@ -67,7 +67,7 @@ class ShortlistingTool(BaseTool):
             conn.close()
 
     def _log_email(self, email, status):
-        log_path = "email_log.json"
+        log_path = "students.json"
         log_entry = {
             "email": email,
             "status": f"Application {status}",
