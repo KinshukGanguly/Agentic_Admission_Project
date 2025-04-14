@@ -1,1 +1,0 @@
-Admission_Results table updated and email logs saved to email_log.json.
