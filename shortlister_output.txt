@@ -1,1 +1,0 @@
-The Admission_Results table has been updated and email logs saved to students.json.
