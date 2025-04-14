@@ -185,12 +185,15 @@ def fetch_admission_status(email):
 
     if result:
         acceptance_status, email_sent = result
-        if email_sent == 1:
+        if email_sent == 1 and acceptance_status == 1:
             status = "Accepted"
         elif email_sent == 0 and acceptance_status == 0:
             status = "In Progress"
-        else:
+        elif email_sent == 1 and acceptance_status == 0:
             status = "Rejected"
+        elif email_sent == 0 and acceptance_status == 1:
+            status = "Accepted (Pending Email)"
+        
         return {"Email": email, "Status": status}
     return None
 # ----------------- STREAMLIT APP -----------------
