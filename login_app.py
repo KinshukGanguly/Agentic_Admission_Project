@@ -436,7 +436,7 @@ def upsert_student_data(email, name, mobile, aadhar, dob, class_10_year, class_1
                 class_12_year, class_12_physics, class_12_maths, class_12_chemistry,
                 jee_year, jee_rank, stream, datetime.now()
             ))
-            cursor.execute("INSERT INTO Admission_result (Email) VALUES (?)", (email,))
+            cursor.execute("INSERT INTO Admission_Results (Email) VALUES (?)", (email,))
         conn.commit()
     except Exception as e:
         conn.rollback()
