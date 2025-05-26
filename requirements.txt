@@ -7,6 +7,11 @@ google-auth
 google-auth-httplib2
 google-auth-oauthlib
 google-cloud-core
+langchain
+langchain-community
+langchain-core
+sqlalchemy
+tqdm>=4.65.0
 streamlit==1.32.0
 chromadb==0.4.24
 pypdf2==3.0.1
@@ -14,6 +19,9 @@ pytesseract==0.3.10
 pillow==10.2.0
 pdf2image==1.17.0
 python-dotenv==1.0.0 
-sqlite3==2.6.0  
 tesseract-ocr
 poppler-utils
+crewai
+crewai-tools
+openai
+langchain-openai
