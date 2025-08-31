@@ -18,8 +18,7 @@ pypdf2==3.0.1
 pytesseract==0.3.10
 pillow==10.2.0
 pdf2image==1.17.0
-python-dotenv==1.0.0 
-tesseract-ocr
+python-dotenv==1.0.0
 poppler-utils
 crewai
 crewai-tools

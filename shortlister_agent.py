@@ -2,16 +2,17 @@ import sqlite3
 import json
 from datetime import datetime
 from typing import Type
-
+import os
 from crewai import Agent, Task, Crew
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 
 
 # ------------------ TOOL ------------------ #
+
 class ShortlistInput(BaseModel):
     """Input schema for ShortlistingTool."""
-    trigger: str = Field(..., description="Just pass any string to trigger shortlisting")
+    trigger: str = Field(..., description="triggering string to start the shortlisting process")
 
 
 class ShortlistingTool(BaseTool):
@@ -70,9 +71,28 @@ class ShortlistingTool(BaseTool):
                     "issues": [""],
                     "timestamp": datetime.now().isoformat()
                 })
-
-            with open("students.json", "w") as f:
-                json.dump(logs, f, indent=4)
+            
+            # Safely write to students.json
+            students_file = "students.json"
+            
+            # Load existing logs if the file exists
+            if os.path.exists(students_file):
+                with open(students_file, "r") as f:
+                    try:
+                        existing_logs = json.load(f)
+                    except json.JSONDecodeError:
+                        print("⚠️ Warning: Malformed JSON in file. Starting fresh.")
+                        existing_logs = []
+            else:
+                existing_logs = []
+            
+            # Extend and save back
+            existing_logs.extend(logs)
+            
+            with open(students_file, "w") as f:
+                json.dump(existing_logs, f, indent=4)
+            
+            print("✅ Logs updated in students.json")
 
             conn.commit()
             return "✅ Shortlisting completed and fresh shortlisted students logged to students.json."

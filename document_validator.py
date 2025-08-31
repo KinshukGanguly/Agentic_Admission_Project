@@ -5,11 +5,12 @@ from typing import Type
 from crewai import Agent, Task, Crew
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
+import os
 
 # ------------------ TOOL ------------------ #
 class ValidationInput(BaseModel):
     """Input schema for DocumentValidatorTool."""
-    trigger: str = Field(..., description="Any string to trigger validation")
+    trigger: str = Field(..., description="START string to trigger validation")
 
 class DocumentValidatorTool(BaseTool):
     name: str = "Document Validation Tool"
@@ -25,7 +26,6 @@ class DocumentValidatorTool(BaseTool):
         cursor.execute("PRAGMA foreign_keys = ON")
         
         try:
-            # Get applications needing validation
             cursor.execute("""
                 SELECT p.Email, p.Mobile_Number, 
                        a.Aadhar_Number, a.DOB,
@@ -44,6 +44,8 @@ class DocumentValidatorTool(BaseTool):
             for app in applications:
                 issues = []
                 email = app[0]
+
+                print(app)
                 
                 # Validate mobile number (exactly 10 digits)
                 if not (app[1].isdigit() and len(app[1]) == 10):
@@ -62,8 +64,8 @@ class DocumentValidatorTool(BaseTool):
                     issues.append(f"Class 12 year {app[6]} is more than 2 years old")
                 
                 # Validate JEE year (current year)
-                if app[9] != current_year:
-                    issues.append(f"JEE year {app[9]} must be current year {current_year}")
+                if app[10] != current_year:
+                    issues.append(f"JEE year {app[10]} must be current year {current_year}")
                 
                 # Validate marks ranges
                 marks_checks = [
@@ -103,14 +105,26 @@ class DocumentValidatorTool(BaseTool):
             
         except Exception as e:
             conn.rollback()
-            return f"❌ Validation error: {str(e)}"
+            return f" Validation error: {str(e)}"
         finally:
             conn.close()
 
     def _save_results(self, results):
         try:
-            with open("student.json", "w") as f:
-                json.dump(results, f, indent=4)
+           
+            if os.path.exists("students.json"):
+                with open("students.json", "r") as f:
+                    old_data = json.load(f)
+            else:
+                old_data = []
+    
+            
+            old_data.extend(results)  # `results` should be a list of dicts
+    
+            
+            with open("students.json", "w") as f:
+                json.dump(old_data, f, indent=4)
+    
         except Exception as e:
             print(f"Error saving results: {str(e)}")
 
@@ -151,8 +165,6 @@ def run_validator_crew():
     result = crew.kickoff(inputs={"trigger": "start"})
     print("Validation Process Complete:\n", result)
 
-if __name__ == "__main__":
-    # Initialize database schema if needed
-   
+if __name__ == "__main__":   
     
     run_validator_crew()

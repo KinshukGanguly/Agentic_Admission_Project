@@ -1,1 +1,41 @@
-✅ Validated 1 applications. Results saved to student.json
+{
+  "validation_results": [
+    {
+      "application_id": "12345",
+      "status": "valid",
+      "details": {
+        "documents_required": [
+          "transcript",
+          "letters_of_recommendation",
+          "personal_statement"
+        ],
+        "submitted_documents": [
+          "transcript",
+          "letters_of_recommendation"
+        ],
+        "missing_documents": [
+          "personal_statement"
+        ],
+        "notes": "Missing personal statement, application cannot proceed without it."
+      }
+    },
+    {
+      "application_id": "67890",
+      "status": "valid",
+      "details": {
+        "documents_required": [
+          "transcript",
+          "letters_of_recommendation",
+          "resume"
+        ],
+        "submitted_documents": [
+          "transcript",
+          "letters_of_recommendation",
+          "resume"
+        ],
+        "missing_documents": [],
+        "notes": "All required documents submitted."
+      }
+    }
+  ]
+}

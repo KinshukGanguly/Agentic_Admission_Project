@@ -53,6 +53,18 @@ def init_sql_db():
     )
     """)
 
+    # Application log table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS Application_Log (
+        Log_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        Email TEXT NOT NULL,
+        status_change VARCHAR(200) NOT NULL,
+        changed_by VARCHAR(100) DEFAULT 'system',
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (Email) REFERENCES Application_Data(Email)
+    )
+    """)
+
     # Admission Results Table
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS Admission_Results (
@@ -76,7 +88,7 @@ def init_sql_db():
 
     conn.commit()
     conn.close()
-    print("✅ SQLite database initialized with tracking tables.")
+    print("------SQLite database initialized with tracking tables.-----")
 
 
 def init_vector_db():
@@ -122,7 +134,7 @@ def reset_test_data():
         collection.delete(where={"email": {"$ne": ""}})  # Delete all email-associated docs
     except:
         pass
-    print("⚠️ All test data reset complete")
+    print(" All test data reset complete")
 
 if __name__ == "__main__":
     os.makedirs("database", exist_ok=True)
@@ -133,4 +145,4 @@ if __name__ == "__main__":
     init_vector_db()
     
     # Uncomment for development testing
-    # reset_test_data()
+    #reset_test_data()

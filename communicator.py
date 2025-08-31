@@ -64,7 +64,7 @@ def generate_email_body(student):
     communicator = Agent(
         role="Admission Communicator",
         goal="Write short and polite emails to students regarding their admission status",
-        backstory="You assist the admission office by notifying students about their application outcomes.",
+        backstory="You assist the admission office by notifying students about their application outcomes and/or application validation status.",
         verbose=True,
         allow_delegation=False,
         tools=[],
@@ -80,7 +80,7 @@ def generate_email_body(student):
 
     task = Task(
         description=(
-            f"Write a short, polite and professional email to a student regarding their admission status.\n\n"
+            f"Write a short, polite and professional email to a student regarding their admission status or document validation status.\n\n"
             f"Student Email: {student['email']}\n"
             f"Status: {student['status'].capitalize()}\n"
             f"{issue_text}\n\n"

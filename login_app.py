@@ -9,6 +9,7 @@ from PIL import Image
 import chromadb
 import pandas as pd
 from chromadb.utils import embedding_functions
+from datetime import datetime
 
 # Paths
 LOGIN_DB_PATH = "database/admissions.db"
@@ -27,7 +28,7 @@ collection = chroma_client.get_or_create_collection(
 )
 
 # ----------------- CACHED DB CONNECTION -----------------
-@st.cache_resource
+#@st.cache_resource
 def get_db_connection():
     return sqlite3.connect(DATA_DB_PATH, check_same_thread=False)
 
@@ -122,60 +123,134 @@ def fetch_student_data(email):
         }
     return None
 
+#def upsert_student_data(email, name, mobile, aadhar, dob, class_10_year, class_10_marks,
+#                        class_12_year, class_12_physics, class_12_maths, class_12_chemistry,
+#                        jee_year, jee_rank, stream):
+#    conn = get_db_connection()
+#    cursor = conn.cursor()
+#
+#    cursor.execute("SELECT Email FROM Primary_Data WHERE Email=?", (email,))
+#    exists = cursor.fetchone()
+#
+#    try:
+#        if exists:
+#            cursor.execute("UPDATE Primary_Data SET Name=?, Mobile_Number=? WHERE Email=?",
+#                           (name, mobile, email))
+#            if()
+#            cursor.execute("""
+#                UPDATE Application_Data SET
+#                    Aadhar_Number=?, DOB=?, Class_10_Year=?, Class_10_Avg_Marks=?,
+#                    Class_12_Year=?, Class_12_Physics=?, Class_12_Maths=?, Class_12_Chemistry=?,
+#                    JEE_Year=?, JEE_Rank=?, Stream_Applied=?, last_validation=?
+#                WHERE Email=?
+#            """, (
+#                aadhar, dob, class_10_year, class_10_marks,
+#                class_12_year, class_12_physics, class_12_maths, class_12_chemistry,
+#                jee_year, jee_rank, stream, datetime.now(), email
+#            ))
+#        else:
+#            cursor.execute("INSERT INTO Primary_Data (Email, Name, Mobile_Number) VALUES (?, ?, ?)",
+#                           (email, name, mobile))
+#            cursor.execute("""
+#                INSERT INTO Application_Data (
+#                    Email, Aadhar_Number, DOB, Class_10_Year, Class_10_Avg_Marks,
+#                    Class_12_Year, Class_12_Physics, Class_12_Maths, Class_12_Chemistry,
+#                    JEE_Year, JEE_Rank, Stream_Applied, last_validation
+#                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+#            """, (
+#                email, aadhar, dob, class_10_year, class_10_marks,
+#                class_12_year, class_12_physics, class_12_maths, class_12_chemistry,
+#                jee_year, jee_rank, stream, datetime.now()
+#            ))
+#            cursor.execute("INSERT INTO Admission_Results (Email) VALUES (?)", (email,))
+#        conn.commit()
+#    except Exception as e:
+#        conn.rollback()
+#        raise e
+
+# ----------------- UPSERT STUDENT DATA -----------------
 def upsert_student_data(email, name, mobile, aadhar, dob, class_10_year, class_10_marks,
                         class_12_year, class_12_physics, class_12_maths, class_12_chemistry,
                         jee_year, jee_rank, stream):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT Email FROM Primary_Data WHERE Email=?", (email,))
-    exists = cursor.fetchone()
-
     try:
+        cursor.execute("SELECT Email FROM Primary_Data WHERE Email=?", (email,))
+        exists = cursor.fetchone()
+
         if exists:
-            cursor.execute("UPDATE Primary_Data SET Name=?, Mobile_Number=? WHERE Email=?",
-                           (name, mobile, email))
+            # Update Primary_Data
+            cursor.execute("""
+                UPDATE Primary_Data 
+                SET Name=?, Mobile_Number=? 
+                WHERE Email=?
+            """, (name, mobile, email))
+            
+            cursor.execute("SELECT validation_attempts FROM Application_Data WHERE Email=?", (email,))
+            val_attempts_row = cursor.fetchone()
+            application_edited_flag = 1 if val_attempts_row and val_attempts_row[0] >= 1 else 0
+
+            # Update Application_Data
             cursor.execute("""
                 UPDATE Application_Data SET
                     Aadhar_Number=?, DOB=?, Class_10_Year=?, Class_10_Avg_Marks=?,
                     Class_12_Year=?, Class_12_Physics=?, Class_12_Maths=?, Class_12_Chemistry=?,
-                    JEE_Year=?, JEE_Rank=?, Stream_Applied=?, last_validation=?
+                    JEE_Year=?, JEE_Rank=?, Stream_Applied=?, last_validation=?, application_edited=?
                 WHERE Email=?
             """, (
                 aadhar, dob, class_10_year, class_10_marks,
                 class_12_year, class_12_physics, class_12_maths, class_12_chemistry,
-                jee_year, jee_rank, stream, datetime.now(), email
+                jee_year, jee_rank, stream, datetime.now(), application_edited_flag, email
             ))
+
         else:
-            cursor.execute("INSERT INTO Primary_Data (Email, Name, Mobile_Number) VALUES (?, ?, ?)",
-                           (email, name, mobile))
+            # New student entry
+            cursor.execute("""
+                INSERT INTO Primary_Data (Email, Name, Mobile_Number) 
+                VALUES (?, ?, ?)
+            """, (email, name, mobile))
+
             cursor.execute("""
                 INSERT INTO Application_Data (
                     Email, Aadhar_Number, DOB, Class_10_Year, Class_10_Avg_Marks,
                     Class_12_Year, Class_12_Physics, Class_12_Maths, Class_12_Chemistry,
-                    JEE_Year, JEE_Rank, Stream_Applied, last_validation
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    JEE_Year, JEE_Rank, Stream_Applied, last_validation, application_edited
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 email, aadhar, dob, class_10_year, class_10_marks,
                 class_12_year, class_12_physics, class_12_maths, class_12_chemistry,
-                jee_year, jee_rank, stream, datetime.now()
+                jee_year, jee_rank, stream, datetime.now(), 0
             ))
+
             cursor.execute("INSERT INTO Admission_Results (Email) VALUES (?)", (email,))
+
         conn.commit()
+
     except Exception as e:
         conn.rollback()
         raise e
+    finally:
+        conn.close()
+
 
 def update_documents(email, documents):
     doc_types = ["aadhar_card", "class_10_marksheet", "class_12_marksheet", "jee_rank_card"]
+    
     for doc_type, doc_file in zip(doc_types, documents):
-        if doc_file is not None:
-            text = extract_text_from_scanned_pdf(doc_file)
-            collection.upsert(
-                documents=[text],
-                metadatas=[{"email": email, "document_type": doc_type}],
-                ids=[f"{email}_{doc_type}"]
-            )
+        if doc_file:
+            try:
+                text = extract_text_from_scanned_pdf(doc_file)
+                collection.upsert(
+                    documents=[text],
+                    metadatas=[{"email": email, "document_type": doc_type}],
+                    ids=[f"{email}_{doc_type}"]
+                )
+            except Exception as e:
+                print(f"Error updating document {doc_type} for {email}: {e}")
+                
+# ----------------- FETCH ADMISSION STATUS -----------------
+
 def fetch_admission_status(email):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -196,6 +271,8 @@ def fetch_admission_status(email):
         
         return {"Email": email, "Status": status}
     return None
+
+
 # ----------------- STREAMLIT APP -----------------
 st.set_page_config(page_title="Student Admission Portal", layout="centered")
 init_login_db()
@@ -293,6 +370,8 @@ elif st.session_state.page == "form":
             )
             update_documents(email, [aadhar_doc, class_10_doc, class_12_doc, jee_rank_doc])
             st.success("Application submitted/updated successfully.")
+
+
 # ----------- CHECK STATUS -------------
 elif st.session_state.page == "status":
     st.title("Admission Status")
@@ -307,6 +386,8 @@ elif st.session_state.page == "status":
         st.dataframe(df)
     else:
         st.write("No admission status found.")
+
+
 # ----------- LOGOUT -------------
 elif st.session_state.page == "logout":
     st.session_state.email = None
