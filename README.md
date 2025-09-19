@@ -27,3 +27,9 @@ streamlit run login_app.py
 ```
 streamlit run admin_app.py
 ```
+
+## Project Flow Diagram
+<img width="1306" height="805" alt="image" src="https://github.com/user-attachments/assets/9ebc5706-b4ad-4cf7-af4f-386fc36e713e" />
+
+
+## Login Screen
